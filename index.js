@@ -6,6 +6,7 @@ const socket = require("socket.io");
 const io = socket(server);
 
 io.on('connection', socket => {
+    console.log('Someone connected!');
     socket.emit("yourID", socket.id);
 });
 
