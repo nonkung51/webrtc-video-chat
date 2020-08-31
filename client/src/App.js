@@ -75,6 +75,7 @@ function App() {
 	const [receivingCall, setReceivingCall] = useState(false);
 	const [callerSignal, setCallerSignal] = useState();
 	const [callAccepted, setCallAccepted] = useState(false);
+	const [connectedPeer, setConnectedPeer] = useState();
 
 	const socket = useRef();
 	const userVideo = useRef();
@@ -128,6 +129,14 @@ function App() {
 			setCallAccepted(true);
 			peer.signal(signal);
 		});
+
+		socket.current.on('hang_up', () => {
+			PartnerVideo = null;
+			setCallAccepted(false);
+			setCallerId('');
+		});
+
+		setConnectedPeer(peer);
 	}
 
 	function acceptCall() {
@@ -149,6 +158,19 @@ function App() {
 		});
 
 		peer.signal(callerSignal);
+
+		setConnectedPeer(peer);
+	}
+
+	// For receiver
+	function hangUp() {
+		PartnerVideo = null;
+		setCallerId('');
+		setReceivingCall(false);
+		setCallerSignal(null);
+		setCallAccepted(false);
+		connectedPeer.destroy();
+		setConnectedPeer(null);
 	}
 
 	let UserVideo;
@@ -193,6 +215,7 @@ function App() {
 				})}
 			</CallerContainer>
 			{incomingCall}
+			<CallButton onClick={hangUp}>{`Hangup`}</CallButton>
 		</Container>
 	);
 }
