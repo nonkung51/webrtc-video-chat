@@ -13,6 +13,12 @@ io.on('connection', socket => {
     }
     socket.emit("id_report", socket.id);
     io.sockets.emit("online_users_report", users);
+    socket.on("call_someone", (data) => {
+        io.to(data.callId).emit('someone_calling', {signal: data.data, from: data.callerId});
+    })
+    socket.on("accept_calling", (data) => {
+        io.to(data.to).emit('call_accepted', data.signal);
+    })
     socket.on('disconnect', () => {
         delete users[socket.id];
         io.sockets.emit("online_users_report", users);
