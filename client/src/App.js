@@ -71,15 +71,43 @@ function App() {
 	const [stream, setStream] = useState();
 	const [myID, setMyID] = useState();
 	const [onlineUsers, setOnlineUsersList] = useState({});
-	const [callerId, setCallerId] = useState('');
+	const [callWithId, setCallWithId] = useState('');
 	const [receivingCall, setReceivingCall] = useState(false);
 	const [callerSignal, setCallerSignal] = useState();
 	const [callAccepted, setCallAccepted] = useState(false);
-	const [connectedPeer, setConnectedPeer] = useState();
+	const [, setConnectedPeer] = useState();
 
 	const socket = useRef();
 	const userVideo = useRef();
 	const partnerVideo = useRef();
+
+	/////////
+
+	const [seconds, setSeconds] = useState(0);
+	const [isActive, setIsActive] = useState(false);
+
+	function timerToggle() {
+		setIsActive(!isActive);
+	}
+
+	function timerReset() {
+		setSeconds(0);
+		setIsActive(false);
+	}
+
+	useEffect(() => {
+		let interval = null;
+		if (isActive) {
+			interval = setInterval(() => {
+				setSeconds((seconds) => seconds + 1);
+			}, 1000);
+		} else if (!isActive && seconds !== 0) {
+			clearInterval(interval);
+		}
+		return () => clearInterval(interval);
+	}, [isActive, seconds]);
+
+	//////////
 
 	useEffect(() => {
 		socket.current = io.connect('localhost:5000');
@@ -99,7 +127,7 @@ function App() {
 		});
 		socket.current.on('someone_calling', (data) => {
 			setReceivingCall(true);
-			setCallerId(data.from);
+			setCallWithId(data.from);
 			setCallerSignal(data.signal);
 		});
 	}, []);
@@ -126,6 +154,8 @@ function App() {
 		});
 
 		socket.current.on('call_accepted', (signal) => {
+			timerToggle();
+			setCallWithId(id);
 			setCallAccepted(true);
 			peer.signal(signal);
 		});
@@ -133,14 +163,18 @@ function App() {
 		socket.current.on('hang_up', () => {
 			PartnerVideo = null;
 			setCallAccepted(false);
-			setCallerId('');
+			timerReset();
+			setReceivingCall(false);
+			setCallWithId('');
 		});
 
 		setConnectedPeer(peer);
 	}
 
 	function acceptCall() {
+		timerToggle();
 		setCallAccepted(true);
+		setReceivingCall(false);
 		const peer = new Peer({
 			initiator: false,
 			trickle: false,
@@ -149,7 +183,7 @@ function App() {
 		peer.on('signal', (data) => {
 			socket.current.emit('accept_calling', {
 				signal: data,
-				to: callerId,
+				to: callWithId,
 			});
 		});
 
@@ -159,18 +193,33 @@ function App() {
 
 		peer.signal(callerSignal);
 
+		socket.current.emit('call_initiate', {
+			callId: callWithId,
+			callerId: myID,
+		});
+
+		socket.current.on('hang_up', () => {
+			PartnerVideo = null;
+			setCallAccepted(false);
+			setReceivingCall(false);
+			setCallWithId('');
+			timerReset();
+		});
+
 		setConnectedPeer(peer);
 	}
 
-	// For receiver
 	function hangUp() {
 		PartnerVideo = null;
-		setCallerId('');
+		setCallWithId('');
 		setReceivingCall(false);
 		setCallerSignal(null);
 		setCallAccepted(false);
-		connectedPeer.destroy();
 		setConnectedPeer(null);
+		timerReset();
+		socket.current.emit('end_call', {
+			id: myID,
+		});
 	}
 
 	let UserVideo;
@@ -183,18 +232,6 @@ function App() {
 		PartnerVideo = <Video playsInline ref={partnerVideo} autoPlay />;
 	}
 
-	let incomingCall;
-	if (receivingCall) {
-		incomingCall = (
-			<>
-				<p>{callerId} is calling you</p>
-				<RecievingCallButton onClick={acceptCall}>
-					Accept
-				</RecievingCallButton>
-			</>
-		);
-	}
-
 	return (
 		<Container>
 			<h1>HCRL - Video Chat!</h1>
@@ -203,19 +240,37 @@ function App() {
 				{PartnerVideo ? PartnerVideo : <BlankContainer />}
 			</VideoContainer>
 
-			<CallerContainer>
-				{Object.values(onlineUsers).map((user) => {
-					if (user.id !== myID) {
-						return (
-							<CallButton
-								onClick={() => callPeer(user.id)}
-							>{`Call ${user.id}`}</CallButton>
-						);
-					}
-				})}
-			</CallerContainer>
-			{incomingCall}
-			<CallButton onClick={hangUp}>{`Hangup`}</CallButton>
+			{!callAccepted && (
+				<CallerContainer>
+					{Object.values(onlineUsers).map((user) => {
+						if (user.id !== myID) {
+							return (
+								<CallButton
+									key={user.id}
+									onClick={() => callPeer(user.id)}
+								>{`Call ${user.id}`}</CallButton>
+							);
+						}
+						return null;
+					})}
+				</CallerContainer>
+			)}
+			{receivingCall && !callAccepted && (
+				<>
+					<p>{callWithId} is calling you</p>
+					<RecievingCallButton onClick={acceptCall}>
+						Accept
+					</RecievingCallButton>
+				</>
+			)}
+
+			{callAccepted && (
+				<>
+					<p>{`Calling time: ${seconds} second(s)`}</p>
+					<p>{`calling with ${callWithId}`}</p>
+					<CallButton onClick={hangUp}>{`Hangup`}</CallButton>
+				</>
+			)}
 		</Container>
 	);
 }
