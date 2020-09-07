@@ -6,6 +6,16 @@ import io from 'socket.io-client';
 const Video = styled.video`
 	height: 20rem;
 	margin: 2rem;
+	border-radius: 1rem;
+	cursor: default;
+
+	&:hover {
+		-webkit-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		-moz-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		transform: scaleX(1.05) scaleY(1.05);
+		transform-origin: bottom;
+	}
 `;
 
 const Container = styled.div`
@@ -19,8 +29,8 @@ const Container = styled.div`
 
 const CallerContainer = styled.div`
 	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
+	flex-direction: column;
+	justify-content: center;
 `;
 
 const CallButton = styled.button`
@@ -28,9 +38,14 @@ const CallButton = styled.button`
 	padding: 0.8rem;
 	border-radius: 2rem;
 	border-width: 0rem;
+	cursor: pointer;
 
 	&:hover {
-		background-color: gray;
+		-webkit-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		-moz-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		transform: scaleX(1.05) scaleY(1.05);
+		transform-origin: bottom;
 	}
 
 	&:focus {
@@ -45,9 +60,14 @@ const RecievingCallButton = styled.button`
 	border-width: 0rem;
 	color: white;
 	background-color: darkolivegreen;
+	cursor: pointer;
 
 	&:hover {
-		background-color: green;
+		-webkit-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		-moz-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		transform: scaleX(1.05) scaleY(1.05);
+		transform-origin: bottom;
 	}
 
 	&:focus {
@@ -65,14 +85,24 @@ const BlankContainer = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	border-radius: 1rem;
 	font-size: 2rem;
 	height: 20rem;
 	width: 28rem;
 	margin: 2rem;
+	cursor: default;
+
+	&:hover {
+		-webkit-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		-moz-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		transform: scaleX(1.05) scaleY(1.05);
+		transform-origin: bottom;
+	}
 `;
 
 function App() {
-	const [stream, setStream] = useState();
+	const [stream, setStream] = useState(null);
 	const [myID, setMyID] = useState();
 	const [onlineUsers, setOnlineUsersList] = useState({});
 	const [callWithId, setCallWithId] = useState('');
@@ -223,7 +253,7 @@ function App() {
 		timerReset();
 		socket.current.emit('end_call', {
 			id: myID,
-			elapseTime: seconds
+			elapseTime: seconds,
 		});
 	}
 
@@ -241,10 +271,18 @@ function App() {
 		<Container>
 			<h1>HCRL - Socke(t) Talky! 🥳</h1>
 			<p>Powered by WebRTC</p>
-			<VideoContainer>
-				{UserVideo}
-				{PartnerVideo ? PartnerVideo : <BlankContainer>No one here yet! 🤨</BlankContainer>}
-			</VideoContainer>
+			{stream && (
+				<VideoContainer>
+					{UserVideo}
+					{PartnerVideo ? (
+						PartnerVideo
+					) : (
+						<BlankContainer>
+							No one here yet! 🤨
+						</BlankContainer>
+					)}
+				</VideoContainer>
+			)}
 
 			{!callAccepted && (
 				<CallerContainer>
