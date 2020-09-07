@@ -1,12 +1,22 @@
 const express = require('express');
 const http = require('http');
+const mongoose = require('mongoose');
+const socket = require('socket.io');
+
+const { mongoURI } = require('./config.json');
+
+require('./models/Call');
+
 const app = express();
 const server = http.createServer(app);
-const socket = require('socket.io');
 const io = socket(server);
+
+mongoose.connect(mongoURI, { useNewUrlParser: true });
 
 const users = {};
 const partners = {};
+
+const Call = mongoose.model('call');
 
 io.on('connection', (socket) => {
 	if (!users[socket.id]) {
@@ -25,19 +35,19 @@ io.on('connection', (socket) => {
 	});
 	socket.on('disconnect', () => {
 		delete users[socket.id];
-        io.sockets.emit('online_users_report', users);
-        io.to(partners[socket.id]).emit('hang_up');
-        io.to(partners[partners[socket.id]]).emit('hang_up');
-    });
-    socket.on('call_initiate', ({callerId, callId}) => {
-        console.log(`${callId} initiate call with ${callerId}`)
-        partners[callId] = callerId;
-        partners[callerId] = callId;
-    });
-    socket.on('end_call', ({ id }) => {
-        console.log(`${id} end call with ${partners[id]}`)
-        io.to(partners[id]).emit('hang_up');
-    });
+		io.sockets.emit('online_users_report', users);
+		io.to(partners[socket.id]).emit('hang_up');
+		io.to(partners[partners[socket.id]]).emit('hang_up');
+	});
+	socket.on('call_initiate', ({ callerId, callId }) => {
+		partners[callId] = callerId;
+		partners[callerId] = callId;
+	});
+	socket.on('end_call', async ({ id, elapseTime }) => {
+		io.to(partners[id]).emit('hang_up');
+		const call = new Call({ caller1: id, caller2: partners[id], elapseTime });
+		await call.save();
+	});
 });
 
 server.listen(5000, () => console.log('server is running on port 5000'));

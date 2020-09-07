@@ -62,6 +62,10 @@ const VideoContainer = styled.div`
 
 const BlankContainer = styled.div`
 	background-color: gray;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 2rem;
 	height: 20rem;
 	width: 28rem;
 	margin: 2rem;
@@ -219,6 +223,7 @@ function App() {
 		timerReset();
 		socket.current.emit('end_call', {
 			id: myID,
+			elapseTime: seconds
 		});
 	}
 
@@ -234,10 +239,11 @@ function App() {
 
 	return (
 		<Container>
-			<h1>HCRL - Video Chat!</h1>
+			<h1>HCRL - Socke(t) Talky! 🥳</h1>
+			<p>Powered by WebRTC</p>
 			<VideoContainer>
 				{UserVideo}
-				{PartnerVideo ? PartnerVideo : <BlankContainer />}
+				{PartnerVideo ? PartnerVideo : <BlankContainer>No one here yet! 🤨</BlankContainer>}
 			</VideoContainer>
 
 			{!callAccepted && (
