@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useBeforeunload } from 'react-beforeunload';
 import styled from 'styled-components';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
@@ -114,6 +115,9 @@ function App() {
 	const socket = useRef();
 	const userVideo = useRef();
 	const partnerVideo = useRef();
+
+	// Use for cleaning up
+	useBeforeunload(hangUp);
 
 	/////////
 

@@ -31,7 +31,9 @@ io.on('connection', (socket) => {
 		});
 	});
 	socket.on('accept_calling', (data) => {
-		io.to(data.to).emit('call_accepted', data.signal);
+		if (partners[data.to] != null) {
+			io.to(data.to).emit('call_accepted', data.signal);
+		}
 	});
 	socket.on('disconnect', () => {
 		delete users[socket.id];
@@ -45,7 +47,11 @@ io.on('connection', (socket) => {
 	});
 	socket.on('end_call', async ({ id, elapseTime }) => {
 		io.to(partners[id]).emit('hang_up');
-		const call = new Call({ caller1: id, caller2: partners[id], elapseTime });
+		const call = new Call({
+			caller1: id,
+			caller2: partners[id],
+			elapseTime,
+		});
 		await call.save();
 	});
 });
