@@ -22,8 +22,12 @@ io.on('connection', (socket) => {
 	if (!users[socket.id]) {
 		users[socket.id] = { id: socket.id };
 	}
+	socket.on('set_username', ({ username }) => {
+		users[socket.id] = { ...users[socket.id], username };
+		io.to(socket.id).emit('username_is_set', { _username: username });
+		io.sockets.emit('online_users_report', users);
+	});
 	socket.emit('id_report', socket.id);
-	io.sockets.emit('online_users_report', users);
 	socket.on('call_someone', (data) => {
 		io.to(data.callId).emit('someone_calling', {
 			signal: data.data,

@@ -54,7 +54,7 @@ const CallButton = styled.button`
 	}
 `;
 
-const RecievingCallButton = styled.button`
+const AcceptButton = styled.button`
 	margin: 1rem;
 	padding: 0.8rem;
 	border-radius: 2rem;
@@ -102,8 +102,36 @@ const BlankContainer = styled.div`
 	}
 `;
 
+const FormContainer = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+`;
+
+const UsernameInput = styled.input`
+	width: 15rem;
+	height: 2rem;
+	border-radius: 2rem;
+	border-width: 0rem;
+	margin: 1rem 0rem 0rem 0rem;
+	padding: 0.25rem 0.75rem 0.25rem 0.75rem;
+	font-size: 1.25rem;
+
+	&:focus {
+		-webkit-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		-moz-box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		box-shadow: 0px 0px 21px 15px rgba(0, 0, 0, 0.15);
+		transform: scaleX(1.05) scaleY(1.05);
+		transform-origin: bottom;
+		outline: none;
+	}
+`;
+
 function App() {
 	const [stream, setStream] = useState(null);
+	const [username, setUsername] = useState(null);
+	const [usernameForm, setUsernameForm] = useState('');
 	const [myID, setMyID] = useState();
 	const [onlineUsers, setOnlineUsersList] = useState({});
 	const [callWithId, setCallWithId] = useState('');
@@ -159,6 +187,9 @@ function App() {
 			});
 		socket.current.on('id_report', (id) => {
 			setMyID(id);
+		});
+		socket.current.on('username_is_set', ({ _username }) => {
+			setUsername(_username);
 		});
 		socket.current.on('online_users_report', (users) => {
 			setOnlineUsersList(users);
@@ -271,10 +302,81 @@ function App() {
 		PartnerVideo = <Video playsInline ref={partnerVideo} autoPlay />;
 	}
 
+	const userIsSetComps = () => {
+		return (
+			<>
+				<h3>{`Hello! ${username} feels like talking to someone?`}</h3>
+				{!callAccepted && Object.values(onlineUsers).length > 1 && (
+					<CallerContainer>
+						{Object.values(onlineUsers).map((user) => {
+							if (user.id !== myID && user.username) {
+								return (
+									<CallButton
+										key={user.id}
+										onClick={() =>
+											callPeer(user.id)
+										}
+									>{`Call ${user.username}`}</CallButton>
+								);
+							}
+							return null;
+						})}
+					</CallerContainer>
+				)}
+				{receivingCall && !callAccepted && callWithId && (
+					<>
+						<p>{onlineUsers[callWithId].username} is calling you</p>
+						<AcceptButton onClick={acceptCall}>
+							Accept
+						</AcceptButton>
+					</>
+				)}
+
+				{callAccepted && callWithId && (
+					<>
+						<p>{`Calling time: ${seconds} second(s)`}</p>
+						<p>{`calling with ${onlineUsers[callWithId].username}`}</p>
+						<CallButton
+							onClick={hangUp}
+						>{`Hangup`}</CallButton>
+					</>
+				)}
+			</>
+		);
+	};
+
+	const setUsernameHandler = (e) => {
+		e.preventDefault();
+		socket.current.emit('set_username', {
+			username: usernameForm,
+		});
+	};
+
+	const userIsntSetComps = () => {
+		return (
+			<>
+				<FormContainer>
+					<label>Set your username!</label>
+					<UsernameInput
+						value={usernameForm}
+						onChange={(e) => setUsernameForm(e.target.value)}
+					></UsernameInput>
+					<AcceptButton onClick={setUsernameHandler}>
+						Submit
+					</AcceptButton>
+				</FormContainer>
+			</>
+		);
+	};
 	return (
 		<Container>
 			<h1>HCRL - Socke(t) Talky! 🥳</h1>
 			<p>Powered by WebRTC</p>
+			<div>
+				Webcam is opened by default but don't worry your information
+				is safe!
+			</div>
+
 			{stream && (
 				<VideoContainer>
 					{UserVideo}
@@ -287,38 +389,8 @@ function App() {
 					)}
 				</VideoContainer>
 			)}
-
-			{!callAccepted && (
-				<CallerContainer>
-					{Object.values(onlineUsers).map((user) => {
-						if (user.id !== myID) {
-							return (
-								<CallButton
-									key={user.id}
-									onClick={() => callPeer(user.id)}
-								>{`Call ${user.id}`}</CallButton>
-							);
-						}
-						return null;
-					})}
-				</CallerContainer>
-			)}
-			{receivingCall && !callAccepted && (
-				<>
-					<p>{callWithId} is calling you</p>
-					<RecievingCallButton onClick={acceptCall}>
-						Accept
-					</RecievingCallButton>
-				</>
-			)}
-
-			{callAccepted && (
-				<>
-					<p>{`Calling time: ${seconds} second(s)`}</p>
-					<p>{`calling with ${callWithId}`}</p>
-					<CallButton onClick={hangUp}>{`Hangup`}</CallButton>
-				</>
-			)}
+			{username && userIsSetComps()}
+			{!username && userIsntSetComps()}
 		</Container>
 	);
 }
