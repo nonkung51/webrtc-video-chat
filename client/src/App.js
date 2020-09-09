@@ -176,7 +176,7 @@ function App() {
 	//////////
 
 	useEffect(() => {
-		socket.current = io.connect('localhost:5000');
+		socket.current = io.connect('/');
 		navigator.mediaDevices
 			.getUserMedia({ video: true, audio: true })
 			.then((stream) => {
@@ -373,7 +373,7 @@ function App() {
 			<h1>HCRL - Socke(t) Talky! 🥳</h1>
 			<p>Powered by WebRTC</p>
 			<div>
-				Webcam is opened by default but don't worry your information
+				Webcam is needed by default but don't worry your information
 				is safe!
 			</div>
 

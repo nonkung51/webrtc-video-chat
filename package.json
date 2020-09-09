@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start-production": "nodemon index.js",
     "start": "concurrently \"nodemon index.js\" \"cd client && yarn start\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

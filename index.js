@@ -8,6 +8,14 @@ const { mongoURI } = require('./config.json');
 require('./models/Call');
 
 const app = express();
+
+app.use(express.static('client/build'));
+
+const path = require('path');
+app.get('*', (req, res) => {
+	res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+});
+
 const server = http.createServer(app);
 const io = socket(server);
 

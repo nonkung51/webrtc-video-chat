@@ -1,3 +1,7 @@
 client/node_modules
+client/build
 config.json
 node_modules
+
+// MacOS
+.DS_Store
