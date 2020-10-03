@@ -60,8 +60,8 @@ io.on('connection', (socket) => {
 	socket.on('end_call', async ({ id, elapseTime }) => {
 		io.to(partners[id]).emit('hang_up');
 		const call = new Call({
-			caller1: id,
-			caller2: partners[id],
+			caller1: users[id].username,
+			caller2: users[partners[id]].username,
 			elapseTime,
 		});
 		await call.save();

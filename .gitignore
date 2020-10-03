@@ -2,6 +2,7 @@ client/node_modules
 client/build
 config.json
 node_modules
+ngrok
 
 // MacOS
 .DS_Store
