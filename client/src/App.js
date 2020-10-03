@@ -6,6 +6,7 @@ import io from 'socket.io-client';
 
 const Video = styled.video`
 	height: 20rem;
+	/* width:  */
 	margin: 2rem;
 	border-radius: 1rem;
 	cursor: default;
@@ -17,9 +18,14 @@ const Video = styled.video`
 		transform: scaleX(1.05) scaleY(1.05);
 		transform-origin: bottom;
 	}
+
+	@media (max-width: 425px) {
+		height: 15rem;
+	}
 `;
 
 const Container = styled.div`
+	margin: 1rem;
 	width: 100vw;
 	height: 100vh;
 	display: flex;
@@ -79,6 +85,10 @@ const AcceptButton = styled.button`
 const VideoContainer = styled.div`
 	display: flex;
 	justify-content: space-between;
+
+	@media (max-width: 425px) {
+		flex-direction: column;
+	}
 `;
 
 const BlankContainer = styled.div`
@@ -325,7 +335,10 @@ function App() {
 				)}
 				{receivingCall && !callAccepted && callWithId && (
 					<>
-						<p>{onlineUsers[callWithId].username} is calling you</p>
+						<p>
+							{onlineUsers[callWithId].username} is calling
+							you
+						</p>
 						<AcceptButton onClick={acceptCall}>
 							Accept
 						</AcceptButton>
@@ -370,7 +383,7 @@ function App() {
 	};
 	return (
 		<Container>
-			<h1>HCRL - Socke(t) Talky! 🥳</h1>
+			<h1>Socke(t) Talky! 🥳</h1>
 			<p>Powered by WebRTC</p>
 			<div>
 				Webcam is needed by default but don't worry your information
